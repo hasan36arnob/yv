@@ -1,0 +1,12 @@
+*.exe
+*.o
+*.a
+*.so
+.DS_Store
+tasks.db
+go.sum
+.vscode
+*.log
+node_modules
+dist
+build

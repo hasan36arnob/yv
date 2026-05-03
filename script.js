@@ -13,8 +13,10 @@ const navbar = document.querySelector('.navbar');
 const contactForm = document.getElementById('contactForm');
 const contactMessage = document.getElementById('contactMessage');
 
-let tasks = JSON.parse(localStorage.getItem('todoProTasks')) || [];
+const API_URL = 'http://localhost:5000/api';
+let tasks = [];
 let activeFilter = 'all';
+let useAPI = false;
 
 const pricingPlans = [
   { selector: '.pricing-card:nth-child(1) .amount', monthly: 4, yearly: 40 },
@@ -22,16 +24,93 @@ const pricingPlans = [
   { selector: '.pricing-card:nth-child(3) .amount', monthly: 15, yearly: 150 }
 ];
 
-const init = () => {
-  renderTasks();
-  updateCounts();
-  applyPricingMode();
-  setActiveFilter('all');
+const checkAPI = async () => {
+  try {
+    const response = await fetch(`${API_URL.replace('/api', '')}/health`);
+    if (response.ok) {
+      useAPI = true;
+      console.log('Connected to backend API');
+      return true;
+    }
+  } catch (error) {
+    console.log('Backend API not available. Using localStorage fallback.');
+  }
+  useAPI = false;
+  tasks = JSON.parse(localStorage.getItem('todoProTasks')) || [];
+  return false;
 };
 
-const saveTasks = () => {
-  localStorage.setItem('todoProTasks', JSON.stringify(tasks));
+const saveTasks = async () => {
+  if (!useAPI) {
+    localStorage.setItem('todoProTasks', JSON.stringify(tasks));
+  }
 };
+
+const fetchTasksFromAPI = async () => {
+  try {
+    const response = await fetch(`${API_URL}/tasks`);
+    if (!response.ok) throw new Error('Failed to fetch tasks');
+    tasks = await response.json() || [];
+    renderTasks();
+    updateCounts();
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+  }
+};
+
+const createTaskViaAPI = async (text) => {
+  try {
+    const response = await fetch(`${API_URL}/tasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, completed: false })
+    });
+    if (!response.ok) throw new Error('Failed to create task');
+    const newTask = await response.json();
+    tasks.unshift(newTask);
+    renderTasks();
+    updateCounts();
+  } catch (error) {
+    console.error('Error creating task:', error);
+    alert('Failed to create task. Please try again.');
+  }
+};
+
+const updateTaskViaAPI = async (id, updates) => {
+  try {
+    const response = await fetch(`${API_URL}/tasks/update?id=${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    if (!response.ok) throw new Error('Failed to update task');
+    const index = tasks.findIndex(t => t.id === id);
+    if (index !== -1) {
+      tasks[index] = { ...tasks[index], ...updates };
+    }
+    renderTasks();
+    updateCounts();
+  } catch (error) {
+    console.error('Error updating task:', error);
+    alert('Failed to update task. Please try again.');
+  }
+};
+
+const deleteTaskViaAPI = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/tasks/delete?id=${id}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Failed to delete task');
+    tasks = tasks.filter(t => t.id !== id);
+    renderTasks();
+    updateCounts();
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    alert('Failed to delete task. Please try again.');
+  }
+};
+
 
 const renderTasks = () => {
   todoList.innerHTML = '';
@@ -86,38 +165,58 @@ const addTask = () => {
     return;
   }
 
-  tasks.unshift({
-    id: Date.now(),
-    text,
-    completed: false,
-    createdAt: new Date().toISOString()
-  });
+  if (useAPI) {
+    createTaskViaAPI(text);
+  } else {
+    tasks.unshift({
+      id: Date.now(),
+      text,
+      completed: false,
+      createdAt: new Date().toISOString()
+    });
+    saveTasks();
+    renderTasks();
+    updateCounts();
+  }
 
   todoInput.value = '';
-  saveTasks();
-  renderTasks();
-  updateCounts();
 };
 
 const toggleComplete = id => {
-  tasks = tasks.map(task => task.id === id ? { ...task, completed: !task.completed } : task);
-  saveTasks();
-  renderTasks();
-  updateCounts();
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+
+  if (useAPI) {
+    updateTaskViaAPI(id, { ...task, completed: !task.completed });
+  } else {
+    task.completed = !task.completed;
+    saveTasks();
+    renderTasks();
+    updateCounts();
+  }
 };
 
 const removeTask = id => {
-  tasks = tasks.filter(task => task.id !== id);
-  saveTasks();
-  renderTasks();
-  updateCounts();
+  if (useAPI) {
+    deleteTaskViaAPI(id);
+  } else {
+    tasks = tasks.filter(task => task.id !== id);
+    saveTasks();
+    renderTasks();
+    updateCounts();
+  }
 };
 
 const clearCompletedTasks = () => {
-  tasks = tasks.filter(task => !task.completed);
-  saveTasks();
-  renderTasks();
-  updateCounts();
+  if (useAPI) {
+    const completedIds = tasks.filter(t => t.completed).map(t => t.id);
+    completedIds.forEach(id => deleteTaskViaAPI(id));
+  } else {
+    tasks = tasks.filter(task => !task.completed);
+    saveTasks();
+    renderTasks();
+    updateCounts();
+  }
 };
 
 const setActiveFilter = filter => {
@@ -178,5 +277,17 @@ document.addEventListener('click', event => {
     mobileMenuBtn.setAttribute('aria-expanded', 'false');
   }
 });
+
+const init = async () => {
+  await checkAPI();
+  if (useAPI) {
+    await fetchTasksFromAPI();
+  } else {
+    renderTasks();
+    updateCounts();
+  }
+  applyPricingMode();
+  setActiveFilter('all');
+};
 
 init();
