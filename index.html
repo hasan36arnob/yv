@@ -3,18 +3,314 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Todo App</title>
+    <meta name="description" content="Modern Todo App with premium features - manage your tasks efficiently with beautiful design and powerful functionality">
+    <meta name="keywords" content="todo app, task manager, productivity, web application, modern UI">
+    <meta name="author" content="TodoApp Team">
+    <title>TodoPro - Modern Task Management</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>✓</text></svg>">
 </head>
 <body>
-    <div class="container">
-        <h1>Todo App</h1>
-        <div class="input-section">
-            <input type="text" id="todoInput" placeholder="Enter a new task...">
-            <button onclick="addTodo()">Add Task</button>
+    <header class="site-header">
+        <div class="header-content">
+            <div class="logo">
+                <h1>TodoPro</h1>
+                <p>Modern Task Management</p>
+            </div>
+            <nav class="navbar">
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="#" class="btn-primary">Get Started</a></li>
+                </ul>
+            </nav>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
-        <ul id="todoList"></ul>
-    </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Manage Your Tasks Like a Pro</h1>
+                <p>Beautiful, intuitive, and powerful todo application designed to boost your productivity. Stay organized, focused, and in control of your day.</p>
+                <div class="hero-buttons">
+                    <a href="#todo-app" class="btn-primary">Try for Free</a>
+                    <a href="#pricing" class="btn-secondary">See Pricing</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="todo-app-preview">
+                    <div class="todo-header">
+                        <h3>Today's Tasks</h3>
+                        <span class="date">May 3, 2026</span>
+                    </div>
+                    <ul class="todo-preview-list">
+                        <li class="todo-item"><span class="todo-text">Complete project proposal</span><span class="todo-actions"><button class="btn-sm complete">✓</button><button class="btn-sm delete">×</button></span></li>
+                        <li class="todo-item completed"><span class="todo-text">Review team feedback</span><span class="todo-actions"><button class="btn-sm complete">✓</button><button class="btn-sm delete">×</button></span></li>
+                        <li class="todo-item"><span class="todo-text">Schedule meeting with client</span><span class="todo-actions"><button class="btn-sm complete">✓</button><button class="btn-sm delete">×</button></span></li>
+                    </ul>
+                    <div class="todo-input-area">
+                        <input type="text" class="todo-input" placeholder="Add a new task...">
+                        <button class="btn-primary">Add</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features-section">
+            <div class="section-header">
+                <h2>Powerful Features</h2>
+                <p>Everything you need to stay productive and organized</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📋</div>
+                    <h3>Task Management</h3>
+                    <p>Create, organize, and prioritize your tasks with intuitive drag-and-drop interface.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⏰</div>
+                    <h3>Due Dates & Reminders</h3>
+                    <p>Never miss a deadline with smart notifications and calendar integration.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Sync Across Devices</h3>
+                    <p>Your tasks stay updated everywhere you go with real-time synchronization.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Team Collaboration</h3>
+                    <p>Share lists, assign tasks, and collaborate with your team in real-time.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Progress Tracking</h3>
+                    <p>Visualize your productivity with detailed analytics and reports.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Secure & Private</h3>
+                    <p>Your data is encrypted and protected with industry-standard security measures.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Todo App Section -->
+        <section id="todo-app" class="todo-app-section">
+            <div class="section-header">
+                <h2>Try TodoPro</h2>
+                <p experience the full power of our task management system</p>
+            </div>
+            <div class="todo-app-container">
+                <div class="todo-header">
+                    <h3>My Tasks</h3>
+                    <div class="todo-stats">
+                        <span id="task-count">0</span> tasks • <span id="completed-count">0</span> completed
+                    </div>
+                </div>
+                <div class="todo-input-section">
+                    <input type="text" id="todoInput" placeholder="What needs to be done?" aria-label="Add a new task">
+                    <button id="addBtn" class="btn-primary">Add Task</button>
+                </div>
+                <ul id="todoList" class="todo-list"></ul>
+                <div class="todo-filters">
+                    <button id="filter-all" class="filter-btn active">All</button>
+                    <button id="filter-active" class="filter-btn">Active</button>
+                    <button id="filter-completed" class="filter-btn">Completed</button>
+                    <button id="clear-completed" class="btn-link">Clear Completed</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section id="pricing" class="pricing-section">
+            <div class="section-header">
+                <h2>Simple Pricing</h2>
+                <p>Choose the plan that fits your needs. All plans come with a 14-day free trial.</p>
+            </div>
+            <div class="pricing-toggle">
+                <span>Monthly</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="pricing-toggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span>Yearly</span>
+            </div>
+            <div class="pricing-cards">
+                <div class="pricing-card popular">
+                    <div class="pricing-header">
+                        <h3>Professional</h3>
+                        <p class="plan-description">Perfect for individuals and freelancers</p>
+                    </div>
+                    <div class="pricing-body">
+                        <div class="price">
+                            <span class="currency">$</span><span class="amount">9</span><span class="period">/mo</span>
+                        </div>
+                        <ul class="pricing-features">
+                            <li>✅ Unlimited tasks</li>
+                            <li>✅ Due dates & reminders</li>
+                            <li>✅ Mobile apps (iOS/Android)</li>
+                            <li>✅ Calendar sync</li>
+                            <li>✅ Advanced filtering</li>
+                            <li>❌ Team collaboration</li>
+                            <li>❌ Custom branding</li>
+                            <li>❌ Priority support</li>
+                        </ul>
+                        <button class="btn-primary btn-block">Start Free Trial</button>
+                    </div>
+                </div>
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Personal</h3>
+                        <p class="plan-description">Great for personal use</p>
+                    </div>
+                    <div class="pricing-body">
+                        <div class="price">
+                            <span class="currency">$</span><span class="amount">4</span><span class="period">/mo</span>
+                        </div>
+                        <ul class="pricing-features">
+                            <li>✅ Unlimited tasks</li>
+                            <li>✅ Due dates & reminders</li>
+                            <li>✅ Mobile apps (iOS/Android)</li>
+                            <li>✅ Basic filtering</li>
+                            <li>❌ Calendar sync</li>
+                            <li>❌ Team collaboration</li>
+                            <li>❌ Custom branding</li>
+                            <li>❌ Priority support</li>
+                        </ul>
+                        <button class="btn-outline btn-block">Start Free Trial</button>
+                    </div>
+                </div>
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Team</h3>
+                        <p class="plan-description">Ideal for teams and businesses</p>
+                    </div>
+                    <div class="pricing-body">
+                        <div class="price">
+                            <span class="currency">$</span><span class="amount">15</span><span class="period">/mo</span>
+                        </div>
+                        <ul class="pricing-features">
+                            <li>✅ Unlimited tasks</li>
+                            <li>✅ Due dates & reminders</li>
+                            <li>✅ Mobile apps (iOS/Android)</li>
+                            <li>✅ Calendar sync</li>
+                            <li>✅ Advanced filtering</li>
+                            <li>✅ Team collaboration</li>
+                            <li>✅ Custom branding</li>
+                            <li>✅ Priority support</li>
+                            <li>✅ Admin controls</li>
+                        </ul>
+                        <button class="btn-primary btn-block">Start Free Trial</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pricing-footer">
+                <p>All prices are billed annually. Monthly billing available at 20% higher rate.</p>
+                <p><small>No credit card required to start. Cancel anytime.</small></p>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="contact-section">
+            <div class="section-header">
+                <h2>Get In Touch</h2>
+                <p>Have questions? We're here to help!</p>
+            </div>
+            <div class="contact-container">
+                <div class="contact-info">
+                    <h3>Contact Information</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> 123 Productivity Street, Tech City</p>
+                    <p><i class="fas fa-phone"></i> +1 (555) 123-4567</p>
+                    <p><i class="fas fa-envelope"></i> info@todopro.com</p>
+                    <p><i class="fas fa-clock"></i> Mon-Fri: 9AM - 6PM EST</p>
+                </div>
+                <div class="contact-form">
+                    <h3>Send Us a Message</h3>
+                    <form id="contactForm">
+                        <div class="form-group">
+                            <input type="text" id="name" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="subject" placeholder="Subject">
+                        </div>
+                        <div class="form-group">
+                            <textarea id="message" placeholder="Your Message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary btn-block">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <h1>TodoPro</h1>
+                <p>Modern Task Management</p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-column">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#">Roadmap</a></li>
+                        <li><a href="#">Changelog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Press</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">Status</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                        <li><a href="#">Security</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 TodoPro. All rights reserved.</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Twitter">🐦</a>
+                    <a href="#" aria-label="LinkedIn">💼</a>
+                    <a href="#" aria-label="GitHub">🐱</a>
+                    <a href="#" aria-label="Instagram">📸</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
