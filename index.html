@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="TodoPro - Simple task management for teams and individuals">
-    <title>TodoPro — Task Management</title>
+    <meta name="description" content="TodoPro - Simple task management for teams">
+    <title>TodoPro - bKash Payments</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="auth-overlay" class="auth-overlay" style="display: none;">
+    <div id="auth-overlay" class="auth-overlay" style="display: flex;">
         <div id="login-form" class="auth-form">
-            <button class="close-btn" onclick="hideAuthModals()">×</button>
             <h2>Welcome Back</h2>
             <p class="form-subtitle">Sign in to your account</p>
             <form onsubmit="handleLogin(event)">
@@ -30,7 +29,6 @@
             </p>
         </div>
         <div id="register-form" class="auth-form" style="display: none;">
-            <button class="close-btn" onclick="hideAuthModals()">×</button>
             <h2>Create Account</h2>
             <p class="form-subtitle">Start your free trial</p>
             <form onsubmit="handleRegister(event)">
@@ -64,14 +62,10 @@
     <div id="app-section" style="display: none;">
         <header class="site-header">
             <div class="header-content">
-                <div class="logo">
-                    <h1>TodoPro</h1>
-                </div>
-                <nav class="navbar" aria-label="Main navigation">
-                    <ul class="nav-list" id="main-nav">
-                        <li><a href="#" onclick="switchView('tasks')" id="nav-tasks" class="active">Tasks</a></li>
-                        <li><a href="#" onclick="switchView('dashboard')" id="nav-dashboard">Dashboard</a></li>
-                        <li><a href="#" onclick="switchView('team')" id="nav-team">Team</a></li>
+                <div class="logo"><h1>TodoPro</h1></div>
+                <nav class="navbar">
+                    <ul class="nav-list">
+                        <li><a href="#" onclick="switchView('tasks')" class="active">Tasks</a></li>
                     </ul>
                 </nav>
                 <div id="user-section"></div>
@@ -79,7 +73,7 @@
         </header>
 
         <main>
-            <section id="tasks-view" class="todo-app-section">
+            <section class="todo-app-section">
                 <div class="section-header">
                     <div class="section-title-row">
                         <div>
@@ -92,25 +86,13 @@
 
                 <div class="todo-app-container">
                     <div class="todo-header">
-                        <div>
-                            <h3>Tasks</h3>
-                        </div>
-                        <div class="todo-stats">
-                            <span id="task-count">0</span> tasks • <span id="completed-count">0</span> completed
-                        </div>
+                        <h3>Tasks</h3>
+                        <span id="task-count">0</span> tasks
                     </div>
-
                     <div class="todo-input-section">
                         <input type="text" id="todoInput" placeholder="New task...">
                         <button id="addBtn" class="btn-primary">Add</button>
                     </div>
-
-                    <div class="task-filters">
-                        <button id="filter-all" class="filter-btn active">All</button>
-                        <button id="filter-active" class="filter-btn">Active</button>
-                        <button id="filter-completed" class="filter-btn">Completed</button>
-                    </div>
-
                     <ul id="todoList" class="todo-list"></ul>
                 </div>
             </section>

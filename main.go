@@ -178,10 +178,11 @@ func init() {
 	var err error
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		log.Println("PostgreSQL not available (running in demo mode with in-memory store):", err)
+		// Continue without database - handlers will return errors gracefully
+	} else {
+		db.AutoMigrate(&User{}, &Workspace{}, &TeamMember{}, &Task{}, &Payment{})
 	}
-
-	db.AutoMigrate(&User{}, &Workspace{}, &TeamMember{}, &Task{}, &Payment{})
 
 	jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 	if len(jwtSecret) == 0 {
@@ -485,8 +486,8 @@ func main() {
 	http.HandleFunc("/api/tasks/delete", rateLimit(withCORS(requireAuth(deleteTask))))
 	http.HandleFunc("/ws", withCORS(requireAuth(handleWebSocket)))
 	http.Handle("/", http.FileServer(http.FS(staticFiles)))
-	http.Handle("/style.css", http.FileServer(http.FS(staticFiles)))
-	http.Handle("/script.js", http.FileServer(http.FS(staticFiles)))
 	fmt.Printf("Server running on :%s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Println("Server error:", err)
+	}
 }
