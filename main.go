@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -11,6 +12,9 @@ import (
 	"sync"
 	"time"
 )
+
+//go:embed index.html style.css script.js
+var staticFiles embed.FS
 
 type Task struct {
 	ID        int64  `json:"id"`
@@ -24,11 +28,16 @@ type Store struct {
 	mu    sync.RWMutex
 }
 
-const dataFile = "tasks.json"
-
-var store *Store
+var (
+	dataFile string
+	store    *Store
+)
 
 func init() {
+	dataFile = os.Getenv("DATA_FILE")
+	if dataFile == "" {
+		dataFile = "tasks.json"
+	}
 	store = &Store{Tasks: []Task{}}
 	loadTasks()
 }
@@ -252,6 +261,7 @@ func main() {
 	})
 
 	http.HandleFunc("/health", healthCheck)
+	http.Handle("/", http.FileServer(http.FS(staticFiles)))
 
 	port := ":5000"
 	fmt.Printf("\n════════════════════════════════════════════════════════════\n")

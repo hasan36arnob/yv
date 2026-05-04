@@ -1,0 +1,13 @@
+.git
+.gitignore
+README.md
+*.exe
+*.db
+*.json
+*.log
+*.bat
+*.sh
+*.md
+build/
+node_modules/
+.vscode/

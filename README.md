@@ -1,6 +1,6 @@
 # TodoPro - Full Stack Task Management App
 
-A modern, production-ready todo application with a responsive frontend and Go backend with SQLite database.
+A modern, production-ready todo application with a responsive frontend and Go backend using JSON-backed storage.
 
 ## 🏗️ Project Structure
 
@@ -10,9 +10,12 @@ d:\yv\
 ├── style.css           # Responsive design and styling
 ├── script.js           # Frontend logic with API integration
 ├── main.go            # Go backend server
-├── go.mod             # Go dependencies
+├── go.mod             # Go module file
 ├── go.sum             # Go dependency checksums
-├── tasks.db           # SQLite database (auto-created)
+├── tasks.json         # JSON data storage file (auto-created)
+├── Dockerfile         # Container build definition
+├── docker-compose.yml # Multi-service container config
+├── .dockerignore      # Docker ignore rules
 ├── README.md          # This file
 └── .gitignore         # Git ignore rules
 ```
@@ -41,11 +44,11 @@ Endpoints:
   DELETE /api/tasks/delete  - Delete a task (with ?id=taskId)
   GET    /health           - Health check
 
-Database: tasks.db
+Storage: tasks.json
 ```
 
 The backend will:
-- Create `tasks.db` automatically on first run
+- Create `tasks.json` automatically on first run
 - Listen on `http://localhost:5000`
 - Enable CORS for frontend communication
 - Provide a RESTful API for task management
@@ -105,19 +108,11 @@ DELETE http://localhost:5000/api/tasks/delete?id=1
 GET http://localhost:5000/health
 ```
 
-## 💾 Database
+## 💾 Data Storage
 
-The app uses **SQLite** for persistence. The database file (`tasks.db`) is automatically created in the project root on first run.
+The app now uses a simple JSON-backed store for persistence. The file `tasks.json` is created automatically on first run and lives next to the backend binary.
 
-**Table schema:**
-```sql
-CREATE TABLE tasks (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  text TEXT NOT NULL,
-  completed BOOLEAN DEFAULT FALSE,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
+This keeps the app lightweight and container-friendly while still preserving tasks across restarts.
 
 ## 🔄 Frontend & Backend Connection
 
@@ -143,23 +138,28 @@ go build -o todopro.exe
 go build -o todopro
 ```
 
-### Docker (Optional)
-Create a `Dockerfile`:
-```dockerfile
-FROM golang:1.21-alpine
-WORKDIR /app
-COPY . .
-RUN go mod download
-RUN go build -o todopro main.go
-EXPOSE 5000
-CMD ["./todopro"]
-```
+### Docker Support
+The project is containerized with `Dockerfile` and `docker-compose.yml`.
 
-Build and run:
+Build and run locally (if Docker is available):
 ```bash
 docker build -t todopro .
-docker run -p 5000:5000 todopro
+docker run -p 5000:5000 -v "$PWD/data:/data" -e DATA_FILE=/data/tasks.json todopro
 ```
+
+Or with Compose:
+```bash
+docker compose up --build
+```
+
+The container runs the Go backend and serves the static frontend from the same origin.
+
+### No Docker on your laptop?
+If your machine is low-end and cannot run Docker locally, you can use GitHub Actions to build the container remotely.
+
+A workflow is included at `.github/workflows/docker-build.yml`. When you push to `main`, GitHub will build the Docker image and publish it to GitHub Container Registry as `ghcr.io/<your-username>/yv:latest`.
+
+> This means you can still use containerization without installing Docker locally.
 
 ## 🔧 Development
 
@@ -175,11 +175,11 @@ go build -o todopro.exe
 .\todopro.exe
 ```
 
-### Database Management
-To reset the database:
+### Data Management
+To reset the data store:
 ```powershell
-Remove-Item tasks.db
-.\todopro.exe  # Recreates empty database
+Remove-Item tasks.json
+.\todopro.exe  # Recreates empty JSON store
 ```
 
 ## 📝 Git Workflow for GitHub Green
@@ -194,7 +194,7 @@ git status
 git add .
 
 # Commit with descriptive message
-git commit -m "Add backend API with Go and SQLite"
+git commit -m "Add backend API with Go and JSON storage"
 
 # Push to main branch
 git push origin main
@@ -209,7 +209,7 @@ git push origin main
 Example commit sequence:
 ```powershell
 git commit -m "Create Go backend with CRUD operations"
-git commit -m "Add SQLite database integration"
+git commit -m "Add JSON storage integration"
 git commit -m "Implement CORS for frontend communication"
 git commit -m "Update frontend to use API endpoints"
 git commit -m "Add fallback to localStorage when API unavailable"
@@ -220,7 +220,7 @@ git commit -m "Add fallback to localStorage when API unavailable"
 ### Backend won't start
 - Check port 5000 is not already in use
 - Ensure Go is installed: `go version`
-- Delete `tasks.db` and restart
+- Delete `tasks.json` and restart
 
 ### Frontend can't connect to API
 - Check backend is running: `curl http://localhost:5000/health`
@@ -243,7 +243,7 @@ go build -o todopro.exe
 
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
 - **Backend**: Go 1.21+
-- **Database**: SQLite3
+- **Data storage**: JSON file-based
 - **API**: RESTful with CORS support
 - **Deployment**: Standalone executable
 
@@ -253,7 +253,7 @@ go build -o todopro.exe
 ✅ Real-time task sync
 ✅ localStorage fallback
 ✅ CORS-enabled API
-✅ SQLite persistence
+✅ JSON persistence
 ✅ Clean, modern UI
 ✅ Mobile-friendly
 ✅ Production-ready

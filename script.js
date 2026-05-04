@@ -13,7 +13,7 @@ const navbar = document.querySelector('.navbar');
 const contactForm = document.getElementById('contactForm');
 const contactMessage = document.getElementById('contactMessage');
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = '/api';
 let tasks = [];
 let activeFilter = 'all';
 let useAPI = false;

@@ -1,0 +1,12 @@
+version: '3.9'
+services:
+  todopro:
+    build: .
+    container_name: todopro-app
+    ports:
+      - '5000:5000'
+    volumes:
+      - ./data:/data
+    environment:
+      - DATA_FILE=/data/tasks.json
+    restart: unless-stopped
