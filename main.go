@@ -179,7 +179,7 @@ func init() {
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Println("PostgreSQL not available (running in demo mode with in-memory store):", err)
-		// Continue without database - handlers will return errors gracefully
+		db = nil
 	} else {
 		db.AutoMigrate(&User{}, &Workspace{}, &TeamMember{}, &Task{}, &Payment{})
 	}
@@ -272,6 +272,10 @@ func hashPassword(password string) string {
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
+	if db == nil {
+		http.Error(w, `{"error":"Database not available"}`, http.StatusServiceUnavailable)
+		return
+	}
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, `{"error":"Invalid request"}`, http.StatusBadRequest)
@@ -302,6 +306,10 @@ func register(w http.ResponseWriter, r *http.Request) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
+	if db == nil {
+		http.Error(w, `{"error":"Database not available"}`, http.StatusServiceUnavailable)
+		return
+	}
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, `{"error":"Invalid request"}`, http.StatusBadRequest)
@@ -321,6 +329,10 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func getProfile(w http.ResponseWriter, r *http.Request) {
+	if db == nil {
+		http.Error(w, `{"error":"Database not available"}`, http.StatusServiceUnavailable)
+		return
+	}
 	userID := r.Context().Value("userID").(uint)
 	var user User
 	db.Preload("Workspaces").First(&user, userID)
@@ -328,6 +340,10 @@ func getProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func submitPayment(w http.ResponseWriter, r *http.Request) {
+	if db == nil {
+		http.Error(w, `{"error":"Database not available"}`, http.StatusServiceUnavailable)
+		return
+	}
 	userID := r.Context().Value("userID").(uint)
 	var req PaymentSubmitRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -350,6 +366,10 @@ func submitPayment(w http.ResponseWriter, r *http.Request) {
 }
 
 func approvePayment(w http.ResponseWriter, r *http.Request) {
+	if db == nil {
+		http.Error(w, `{"error":"Database not available"}`, http.StatusServiceUnavailable)
+		return
+	}
 	trxID := r.URL.Query().Get("trx_id")
 	secret := r.URL.Query().Get("secret")
 	adminSecret := os.Getenv("ADMIN_SECRET")
@@ -385,6 +405,10 @@ func sanitizeUser(user User) User {
 }
 
 func getWorkspaces(w http.ResponseWriter, r *http.Request) {
+	if db == nil {
+		http.Error(w, `{"error":"Database not available"}`, http.StatusServiceUnavailable)
+		return
+	}
 	userID := r.Context().Value("userID").(uint)
 	var memberships []TeamMember
 	db.Where("user_id = ? AND is_active = ?", userID, true).Preload("Workspace").Find(&memberships)
@@ -396,6 +420,10 @@ func getWorkspaces(w http.ResponseWriter, r *http.Request) {
 }
 
 func createWorkspace(w http.ResponseWriter, r *http.Request) {
+	if db == nil {
+		http.Error(w, `{"error":"Database not available"}`, http.StatusServiceUnavailable)
+		return
+	}
 	userID := r.Context().Value("userID").(uint)
 	var req CreateWorkspaceRequest
 	json.NewDecoder(r.Body).Decode(&req)
@@ -406,6 +434,10 @@ func createWorkspace(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTasks(w http.ResponseWriter, r *http.Request) {
+	if db == nil {
+		http.Error(w, `{"error":"Database not available"}`, http.StatusServiceUnavailable)
+		return
+	}
 	workspaceID := r.URL.Query().Get("workspace_id")
 	var tasks []Task
 	db.Where("workspace_id = ?", workspaceID).Preload("Assignee").Find(&tasks)
@@ -413,6 +445,10 @@ func getTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func createTask(w http.ResponseWriter, r *http.Request) {
+	if db == nil {
+		http.Error(w, `{"error":"Database not available"}`, http.StatusServiceUnavailable)
+		return
+	}
 	userID := r.Context().Value("userID").(uint)
 	workspaceID := r.URL.Query().Get("workspace_id")
 	var req CreateTaskRequest
@@ -427,6 +463,10 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateTask(w http.ResponseWriter, r *http.Request) {
+	if db == nil {
+		http.Error(w, `{"error":"Database not available"}`, http.StatusServiceUnavailable)
+		return
+	}
 	taskID := r.URL.Query().Get("id")
 	var req UpdateTaskRequest
 	json.NewDecoder(r.Body).Decode(&req)
@@ -439,6 +479,10 @@ func updateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteTask(w http.ResponseWriter, r *http.Request) {
+	if db == nil {
+		http.Error(w, `{"error":"Database not available"}`, http.StatusServiceUnavailable)
+		return
+	}
 	taskID := r.URL.Query().Get("id")
 	var task Task
 	db.First(&task, taskID)
