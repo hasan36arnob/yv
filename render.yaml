@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: todopro-saas
+    runtime: go
+    buildCommand: go build -o main .
+    startCommand: ./main
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: todopro-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_SECRET
+        generateValue: true
+    healthCheckPath: /
+    autoDeploy: true
+
+databases:
+  - name: todopro-db
+    type: postgresql
+    plan: free
+    ipAllowList: []

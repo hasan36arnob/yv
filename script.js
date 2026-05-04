@@ -1,8 +1,5 @@
-// TodoPro SaaS - Frontend Application
 const API_URL = '/api';
-const APP_URL = window.location.origin;
 
-// State management
 const state = {
 	user: null,
 	token: localStorage.getItem('todopro_token'),
@@ -12,16 +9,9 @@ const state = {
 	tasks: [],
 	ws: null,
 	wsConnected: false,
-	currentView: 'tasks', // tasks, dashboard, analytics
+	currentView: 'tasks',
 	filter: 'all'
 };
-
-// Stripe public key
-const STRIPE_PUBLIC_KEY = 'pk_test_placeholder'; // Replace with actual Stripe public key
-
-// ============================================
-// INITIALIZATION
-// ============================================
 
 document.addEventListener('DOMContentLoaded', async () => {
 	await initAuth();
@@ -38,7 +28,6 @@ async function initAuth() {
 			updateAuthUI(true);
 			await loadWorkspaces();
 		} catch (error) {
-			console.log('Token invalid, clearing...');
 			clearTokens();
 			showAuthModals();
 		}
@@ -48,19 +37,9 @@ async function initAuth() {
 }
 
 async function initApp() {
-	// Initialize pricing toggle
-	applyPricingMode();
-	
-	// Initialize mobile menu
 	const mobileMenuBtn = document.getElementById('mobile-menu-btn');
 	if (mobileMenuBtn) {
 		mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-	}
-	
-	// Initialize contact form
-	const contactForm = document.getElementById('contactForm');
-	if (contactForm) {
-		contactForm.addEventListener('submit', submitContactForm);
 	}
 }
 
@@ -69,121 +48,60 @@ async function checkAPIHealth() {
 		const response = await fetch(`${API_URL}/profile`, {
 			headers: { 'Authorization': `Bearer ${state.token}` }
 		});
-		if (response.ok) {
-			return true;
-		}
+		return response.ok;
 	} catch (error) {
-		console.log('Backend API not available');
+		return false;
 	}
-	return false;
 }
 
-// ============================================
-// AUTHENTICATION
-// ============================================
-
 async function register(email, password, firstName, lastName) {
-	try {
-		const response = await fetch(`${API_URL}/register`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ email, password, first_name: firstName, last_name: lastName })
-		});
-
-		const data = await response.json();
-
-		if (!response.ok) {
-			throw new Error(data.error || 'Registration failed');
-		}
-
-		// Store tokens
-		state.token = data.token;
-		state.refreshToken = data.refresh_token;
-		state.user = data.user;
-		saveTokens();
-		
-		updateAuthUI(true);
-		hideAuthModals();
-		await loadWorkspaces();
-		
-		return data;
-	} catch (error) {
-		console.error('Registration error:', error);
-		throw error;
-	}
+	const response = await fetch(`${API_URL}/register`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ email, password, first_name: firstName, last_name: lastName })
+	});
+	const data = await response.json();
+	if (!response.ok) throw new Error(data.error || 'Registration failed');
+	
+	state.token = data.token;
+	state.refreshToken = data.refresh_token;
+	state.user = data.user;
+	saveTokens();
+	updateAuthUI(true);
+	hideAuthModals();
+	await loadWorkspaces();
+	return data;
 }
 
 async function login(email, password) {
-	try {
-		const response = await fetch(`${API_URL}/login`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ email, password })
-		});
-
-		const data = await response.json();
-
-		if (!response.ok) {
-			throw new Error(data.error || 'Login failed');
-		}
-
-		state.token = data.token;
-		state.refreshToken = data.refresh_token;
-		state.user = data.user;
-		saveTokens();
-		
-		updateAuthUI(true);
-		hideAuthModals();
-		await loadWorkspaces();
-		
-		return data;
-	} catch (error) {
-		console.error('Login error:', error);
-		throw error;
-	}
+	const response = await fetch(`${API_URL}/login`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ email, password })
+	});
+	const data = await response.json();
+	if (!response.ok) throw new Error(data.error || 'Login failed');
+	
+	state.token = data.token;
+	state.refreshToken = data.refresh_token;
+	state.user = data.user;
+	saveTokens();
+	updateAuthUI(true);
+	hideAuthModals();
+	await loadWorkspaces();
+	return data;
 }
 
 async function logout() {
-	try {
-		state.token = null;
-		state.refreshToken = null;
-		state.user = null;
-		state.workspace = null;
-		state.tasks = [];
-		
-		clearTokens();
-		disconnectWebSocket();
-		updateAuthUI(false);
-		showAuthModals();
-	} catch (error) {
-		console.error('Logout error:', error);
-	}
-}
-
-async function refreshAuthToken() {
-	if (!state.refreshToken) return false;
-
-	try {
-		const response = await fetch(`${API_URL}/refresh`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ refresh_token: state.refreshToken })
-		});
-
-		if (!response.ok) {
-			throw new Error('Refresh failed');
-		}
-
-		const data = await response.json();
-		state.token = data.token;
-		state.refreshToken = data.refresh_token;
-		saveTokens();
-		return true;
-	} catch (error) {
-		console.error('Token refresh failed:', error);
-		clearTokens();
-		return false;
-	}
+	state.token = null;
+	state.refreshToken = null;
+	state.user = null;
+	state.workspace = null;
+	state.tasks = [];
+	clearTokens();
+	disconnectWebSocket();
+	updateAuthUI(false);
+	showAuthModals();
 }
 
 function saveTokens() {
@@ -204,10 +122,6 @@ async function fetchProfile() {
 	return response.json();
 }
 
-// ============================================
-// API HELPERS
-// ============================================
-
 async function apiRequest(endpoint, method = 'GET', body = null) {
 	const options = {
 		method,
@@ -223,7 +137,6 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 
 	let response = await fetch(`${API_URL}${endpoint}`, options);
 
-	// Handle 401 (token expired)
 	if (response.status === 401 && state.refreshToken) {
 		const refreshed = await refreshAuthToken();
 		if (refreshed) {
@@ -233,27 +146,18 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 	}
 
 	const data = await response.json();
-
 	if (!response.ok) {
 		throw new Error(data.error || 'API request failed');
 	}
-
 	return data;
 }
-
-// ============================================
-// WORKSPACE MANAGEMENT
-// ============================================
 
 async function loadWorkspaces() {
 	try {
 		state.workspaces = await apiRequest('/workspaces');
-		
-		// Select first workspace or create default
 		if (state.workspaces.length > 0) {
 			selectWorkspace(state.workspaces[0].id);
 		} else {
-			// Create default personal workspace
 			await createWorkspace('My Workspace', 'Personal task management');
 			await loadWorkspaces();
 		}
@@ -263,15 +167,10 @@ async function loadWorkspaces() {
 }
 
 async function createWorkspace(name, description) {
-	try {
-		const workspace = await apiRequest('/workspaces/create', 'POST', { name, description });
-		state.workspaces.push(workspace);
-		selectWorkspace(workspace.id);
-		showNotification('Workspace created successfully', 'success');
-	} catch (error) {
-		console.error('Failed to create workspace:', error);
-		throw error;
-	}
+	const workspace = await apiRequest('/workspaces/create', 'POST', { name, description });
+	state.workspaces.push(workspace);
+	selectWorkspace(workspace.id);
+	showNotification('Workspace created', 'success');
 }
 
 function selectWorkspace(workspaceId) {
@@ -281,13 +180,8 @@ function selectWorkspace(workspaceId) {
 	updateWorkspaceUI();
 }
 
-// ============================================
-// TASK MANAGEMENT
-// ============================================
-
 async function loadTasks() {
 	if (!state.workspace) return;
-	
 	try {
 		state.tasks = await apiRequest(`/tasks?workspace_id=${state.workspace.id}`);
 		renderTasks();
@@ -298,88 +192,44 @@ async function loadTasks() {
 }
 
 async function createTask(title, description = '', priority = 'medium', assigneeId = null, dueDate = null) {
-	try {
-		const task = await apiRequest(`/tasks/create?workspace_id=${state.workspace.id}`, 'POST', {
-			title,
-			description,
-			priority,
-			assignee_id: assigneeId,
-			due_date: dueDate
-		});
-		
-		state.tasks.unshift(task);
-		renderTasks();
-		updateTaskCounts();
-		showNotification('Task created', 'success');
-	} catch (error) {
-		console.error('Failed to create task:', error);
-		showNotification('Failed to create task', 'error');
-	}
+	const task = await apiRequest(`/tasks/create?workspace_id=${state.workspace.id}`, 'POST', {
+		title, description, priority, assignee_id: assigneeId, due_date: dueDate
+	});
+	state.tasks.unshift(task);
+	renderTasks();
+	updateTaskCounts();
 }
 
 async function updateTask(taskId, updates) {
-	try {
-		const task = await apiRequest(`/tasks/update?id=${taskId}`, 'PUT', updates);
-		
-		const index = state.tasks.findIndex(t => t.id === taskId);
-		if (index !== -1) {
-			state.tasks[index] = task;
-		}
-		
-		renderTasks();
-		updateTaskCounts();
-	} catch (error) {
-		console.error('Failed to update task:', error);
-		showNotification('Failed to update task', 'error');
-	}
+	const task = await apiRequest(`/tasks/update?id=${taskId}`, 'PUT', updates);
+	const index = state.tasks.findIndex(t => t.id === taskId);
+	if (index !== -1) state.tasks[index] = task;
+	renderTasks();
+	updateTaskCounts();
 }
 
 async function deleteTask(taskId) {
-	try {
-		await apiRequest(`/tasks/delete?id=${taskId}`, 'DELETE');
-		state.tasks = state.tasks.filter(t => t.id !== taskId);
-		renderTasks();
-		updateTaskCounts();
-		showNotification('Task deleted', 'success');
-	} catch (error) {
-		console.error('Failed to delete task:', error);
-		showNotification('Failed to delete task', 'error');
-	}
+	await apiRequest(`/tasks/delete?id=${taskId}`, 'DELETE');
+	state.tasks = state.tasks.filter(t => t.id !== taskId);
+	renderTasks();
+	updateTaskCounts();
 }
 
-// ============================================
-// WEBSOCKET
-// ============================================
-
 function connectWebSocket() {
-	if (state.ws) {
-		disconnectWebSocket();
-	}
+	if (state.ws) disconnectWebSocket();
 
 	const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 	const wsUrl = `${wsProtocol}//${window.location.host}/ws?workspace_id=${state.workspace.id}`;
 	
 	state.ws = new WebSocket(wsUrl, `Bearer ${state.token}`);
-
-	state.ws.onopen = () => {
-		console.log('WebSocket connected');
-		state.wsConnected = true;
-	};
-
+	state.ws.onopen = () => { state.wsConnected = true; };
 	state.ws.onmessage = (event) => {
 		const message = JSON.parse(event.data);
 		handleWebSocketMessage(message);
 	};
-
 	state.ws.onclose = () => {
-		console.log('WebSocket disconnected');
 		state.wsConnected = false;
-		// Reconnect after 5 seconds
 		setTimeout(connectWebSocket, 5000);
-	};
-
-	state.ws.onerror = (error) => {
-		console.error('WebSocket error:', error);
 	};
 }
 
@@ -401,11 +251,8 @@ function handleWebSocketMessage(message) {
 			break;
 		case 'task_updated':
 			const idx = state.tasks.findIndex(t => t.id === message.payload.id);
-			if (idx !== -1) {
-				state.tasks[idx] = message.payload;
-			} else {
-				state.tasks.push(message.payload);
-			}
+			if (idx !== -1) state.tasks[idx] = message.payload;
+			else state.tasks.push(message.payload);
 			renderTasks();
 			updateTaskCounts();
 			break;
@@ -416,99 +263,6 @@ function handleWebSocketMessage(message) {
 			break;
 	}
 }
-
-// ============================================
-// STRIPE PAYMENTS
-// ============================================
-
-async function createCheckoutSession(planId) {
-	if (!state.user) {
-		showAuthModals('login');
-		return;
-	}
-
-	try {
-		// Load Stripe.js
-		if (!window.Stripe) {
-			const script = document.createElement('script');
-			script.src = 'https://js.stripe.com/v3/';
-			script.onload = () => initStripeCheckout(planId);
-			document.head.appendChild(script);
-		} else {
-			initStripeCheckout(planId);
-		}
-	} catch (error) {
-		console.error('Stripe checkout error:', error);
-		showNotification('Payment system unavailable', 'error');
-	}
-}
-
-function initStripeCheckout(planId) {
-	const stripe = Stripe(STRIPE_PUBLIC_KEY);
-	
-	// Create checkout session
-	fetch(`${API_URL}/checkout/create`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'Authorization': `Bearer ${state.token}`
-		},
-		body: JSON.stringify({ plan_id: planId })
-	})
-	.then(res => res.json())
-	.then(data => {
-		if (data.url) {
-			window.location.href = data.url;
-		} else {
-			throw new Error('Invalid checkout response');
-		}
-	})
-	.catch(error => {
-		console.error('Checkout error:', error);
-		showNotification('Failed to start checkout', 'error');
-	});
-}
-
-// ============================================
-// ANALYTICS & DASHBOARD
-// ============================================
-
-async function loadAnalytics() {
-	if (!state.workspace) return;
-	
-	try {
-		const analytics = await apiRequest(`/analytics?workspace_id=${state.workspace.id}`);
-		renderAnalytics(analytics);
-	} catch (error) {
-		console.error('Failed to load analytics:', error);
-	}
-}
-
-function renderAnalytics(data) {
-	// Render charts (integrate Chart.js here)
-	const completionRate = document.getElementById('completion-rate');
-	if (completionRate) {
-		completionRate.textContent = `${data.summary.completion_rate.toFixed(1)}%`;
-	}
-	
-	// Populate team productivity table
-	const tbody = document.getElementById('productivity-table');
-	if (tbody && data.by_assignee) {
-		tbody.innerHTML = data.by_assignee.map(member => `
-			<tr>
-				<td>${member.user.first_name} ${member.user.last_name}</td>
-				<td>${member.total}</td>
-				<td>${member.completed}</td>
-				<td>${member.in_progress}</td>
-				<td>${calculateRate(member.completed, member.total).toFixed(1)}%</td>
-			</tr>
-		`).join('');
-	}
-}
-
-// ============================================
-// UI RENDERING
-// ============================================
 
 function renderTasks() {
 	const todoList = document.getElementById('todoList');
@@ -539,8 +293,7 @@ function renderTasks() {
 				</div>
 			</div>
 			<div class="task-actions">
-				<button onclick="toggleTaskStatus(${task.id}, '${task.status}')" 
-					class="btn-icon ${task.status === 'completed' ? 'btn-undo' : 'btn-complete'}">
+				<button onclick="toggleTaskStatus(${task.id}, '${task.status}')" class="btn-icon ${task.status === 'completed' ? 'btn-undo' : 'btn-complete'}">
 					${task.status === 'completed' ? '↩' : '✓'}
 				</button>
 				<button onclick="promptDeleteTask(${task.id})" class="btn-icon btn-delete">🗑</button>
@@ -552,35 +305,27 @@ function renderTasks() {
 function updateTaskCounts() {
 	const taskCount = document.getElementById('task-count');
 	const completedCount = document.getElementById('completed-count');
-	
 	if (taskCount) taskCount.textContent = state.tasks.length;
 	if (completedCount) completedCount.textContent = state.tasks.filter(t => t.status === 'completed').length;
 }
 
 function updateAuthUI(isLoggedIn) {
 	const userSection = document.getElementById('user-section');
-	const authSection = document.getElementById('auth-section');
 	const appSection = document.getElementById('app-section');
 	
 	if (isLoggedIn && state.user) {
 		if (userSection) {
 			userSection.innerHTML = `
 				<div class="user-menu">
-					<button id="workspace-switcher" class="btn-secondary">
-						${state.workspace ? state.workspace.name : 'Select Workspace'}
-					</button>
-					<button id="user-profile" class="btn-secondary">
-						${state.user.first_name || state.user.email}
-					</button>
+					<button id="workspace-switcher" class="btn-secondary">${state.workspace ? state.workspace.name : 'Select Workspace'}</button>
+					<button id="user-profile" class="btn-secondary">${state.user.first_name || state.user.email}</button>
 					<button id="logout-btn" class="btn-outline">Logout</button>
 				</div>
 			`;
 			setupUserMenuListeners();
 		}
-		if (authSection) authSection.style.display = 'none';
 		if (appSection) appSection.style.display = 'block';
 	} else {
-		if (authSection) authSection.style.display = 'flex';
 		if (appSection) appSection.style.display = 'none';
 	}
 }
@@ -592,12 +337,7 @@ function updateWorkspaceUI() {
 	}
 }
 
-// ============================================
-// EVENT LISTENERS
-// ============================================
-
 function setupEventListeners() {
-	// Task input
 	const todoInput = document.getElementById('todoInput');
 	const addBtn = document.getElementById('addBtn');
 	
@@ -608,31 +348,12 @@ function setupEventListeners() {
 		});
 	}
 
-	// Filters
 	['all', 'active', 'completed'].forEach(filter => {
 		const btn = document.getElementById(`filter-${filter}`);
 		if (btn) {
 			btn.addEventListener('click', () => setFilter(filter));
 		}
 	});
-
-	// Clear completed
-	const clearCompleted = document.getElementById('clear-completed');
-	if (clearCompleted) {
-		clearCompleted.addEventListener('click', clearCompletedTasks);
-	}
-
-	// Pricing toggle
-	const pricingToggle = document.getElementById('pricing-toggle');
-	if (pricingToggle) {
-		pricingToggle.addEventListener('change', applyPricingMode);
-	}
-
-	// Logout
-	const logoutBtn = document.getElementById('logout-btn');
-	if (logoutBtn) {
-		logoutBtn.addEventListener('click', logout);
-	}
 }
 
 function setupUserMenuListeners() {
@@ -640,76 +361,35 @@ function setupUserMenuListeners() {
 	if (logoutBtn) {
 		logoutBtn.addEventListener('click', logout);
 	}
-	
-	const profileBtn = document.getElementById('user-profile');
-	if (profileBtn) {
-		profileBtn.addEventListener('click', () => {
-			// Navigate to profile page
-			showNotification('Profile page coming soon', 'info');
-		});
-	}
-	
-	const workspaceSwitcher = document.getElementById('workspace-switcher');
-	if (workspaceSwitcher) {
-		workspaceSwitcher.addEventListener('click', () => {
-			showWorkspaceSwitcher();
-		});
-	}
 }
-
-// ============================================
-// TASK OPERATIONS
-// ============================================
 
 async function handleAddTask() {
 	const input = document.getElementById('todoInput');
 	const text = input.value.trim();
-	
 	if (!text) return;
-	
 	if (state.workspace) {
 		await createTask(text);
 		input.value = '';
-	} else {
-		showNotification('Please select a workspace first', 'warning');
 	}
 }
 
 async function toggleTaskStatus(taskId, currentStatus) {
-	const updates = { 
+	await updateTask(taskId, { 
 		status: currentStatus === 'completed' ? 'pending' : 'completed',
 		completed_at: currentStatus === 'completed' ? null : new Date().toISOString()
-	};
-	await updateTask(taskId, updates);
+	});
 }
 
 async function promptDeleteTask(taskId) {
-	if (confirm('Are you sure you want to delete this task?')) {
+	if (confirm('Delete this task?')) {
 		await deleteTask(taskId);
-	}
-}
-
-function clearCompletedTasks() {
-	const completedTasks = state.tasks.filter(t => t.status === 'completed');
-	if (completedTasks.length === 0) return;
-	
-	if (confirm(`Delete ${completedTasks.length} completed task(s)?`)) {
-		completedTasks.forEach(task => deleteTask(task.id));
 	}
 }
 
 function setFilter(filter) {
 	state.filter = filter;
-	['filter-all', 'filter-active', 'filter-completed'].forEach(id => {
-		const btn = document.getElementById(id);
-		if (btn) btn.classList.toggle('active', id === `filter-${filter}`);
-	});
 	renderTasks();
 }
-
-// ============================================
-// AUTH MODALS
-// ============================================
 
 function showAuthModals(initialTab = 'login') {
 	const overlay = document.getElementById('auth-overlay');
@@ -721,15 +401,12 @@ function showAuthModals(initialTab = 'login') {
 
 function hideAuthModals() {
 	const overlay = document.getElementById('auth-overlay');
-	if (overlay) {
-		overlay.style.display = 'none';
-	}
+	if (overlay) overlay.style.display = 'none';
 }
 
 function showAuthTab(tab) {
 	const loginForm = document.getElementById('login-form');
 	const registerForm = document.getElementById('register-form');
-	
 	if (tab === 'login' && loginForm) {
 		loginForm.style.display = 'block';
 		registerForm.style.display = 'none';
@@ -743,7 +420,6 @@ async function handleLogin(e) {
 	e.preventDefault();
 	const email = document.getElementById('login-email').value;
 	const password = document.getElementById('login-password').value;
-	
 	try {
 		await login(email, password);
 		hideAuthModals();
@@ -780,34 +456,58 @@ function showAuthError(elementId, message) {
 	}
 }
 
-// ============================================
-// PRICING & PAYMENTS
-// ============================================
-
-function applyPricingMode() {
-	const toggle = document.getElementById('pricing-toggle');
-	if (!toggle) return;
+function showPaymentModal() {
+	const modal = document.createElement('div');
+	modal.className = 'modal-overlay';
+	modal.innerHTML = `
+		<div class="modal payment-modal">
+			<button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+			<h2>Upgrade to Pro</h2>
+			<div class="payment-instructions">
+				<p class="payment-amount">Send <strong>৳500</strong> to bKash:</p>
+				<div class="payment-number">017XXXXXXXX</div>
+				<p class="payment-note">(Personal bKash/Nagad number)</p>
+			</div>
+			<form id="payment-form" class="payment-form">
+				<div class="form-group">
+					<label for="trx-id">Transaction ID</label>
+					<input type="text" id="trx-id" placeholder="Enter bKash/Nagad TrxID" required>
+				</div>
+				<button type="submit" class="btn-primary btn-block">Submit for Approval</button>
+			</form>
+			<p id="payment-message" class="payment-message"></p>
+		</div>
+	`;
 	
-	const isYearly = toggle.checked;
-	const plans = [
-		{ selector: '.pricing-card:nth-child(1) .amount', monthly: 4, yearly: 40 },
-		{ selector: '.pricing-card:nth-child(2) .amount', monthly: 9, yearly: 90 },
-		{ selector: '.pricing-card:nth-child(3) .amount', monthly: 15, yearly: 150 }
-	];
+	document.body.appendChild(modal);
 	
-	plans.forEach(plan => {
-		const el = document.querySelector(plan.selector);
-		if (el) el.textContent = isYearly ? plan.yearly : plan.monthly;
+	document.getElementById('payment-form').addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const trxId = document.getElementById('trx-id').value.trim();
+		const messageEl = document.getElementById('payment-message');
+		
+		try {
+			const response = await fetch(`${API_URL}/payments/submit`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${state.token}`
+				},
+				body: JSON.stringify({ trx_id: trxId, method: 'bkash' })
+			});
+			
+			const data = await response.json();
+			if (response.ok) {
+				messageEl.innerHTML = '<span class="status-badge status-pending">Payment pending. Admin will approve shortly.</span>';
+				document.getElementById('payment-form').reset();
+			} else {
+				messageEl.innerHTML = `<span class="status-badge status-error">${data.error}</span>`;
+			}
+		} catch (error) {
+			messageEl.innerHTML = `<span class="status-badge status-error">Submission failed</span>`;
+		}
 	});
 }
-
-async function handleSubscribe(planId) {
-	await createCheckoutSession(planId);
-}
-
-// ============================================
-// UTILITIES
-// ============================================
 
 function formatDate(dateStr) {
 	const date = new Date(dateStr);
@@ -820,18 +520,11 @@ function escapeHtml(text) {
 	return div.innerHTML;
 }
 
-function calculateRate(completed, total) {
-	if (total === 0) return 0;
-	return (completed / total * 100).toFixed(1);
-}
-
 function showNotification(message, type = 'info') {
-	// Create toast notification
 	const toast = document.createElement('div');
 	toast.className = `toast toast-${type}`;
 	toast.textContent = message;
 	document.body.appendChild(toast);
-	
 	setTimeout(() => toast.remove(), 3000);
 }
 
@@ -839,85 +532,8 @@ function toggleMobileMenu() {
 	const menuBtn = document.getElementById('mobile-menu-btn');
 	const navbar = document.querySelector('.navbar');
 	const expanded = menuBtn.getAttribute('aria-expanded') === 'true';
-	
 	menuBtn.setAttribute('aria-expanded', !expanded);
 	navbar.classList.toggle('open');
 }
 
-async function submitContactForm(e) {
-	e.preventDefault();
-	const name = document.getElementById('name').value.trim();
-	const email = document.getElementById('email').value.trim();
-	const message = document.getElementById('message').value.trim();
-	
-	if (!name || !email || !message) {
-		showFormError('Please fill in all required fields');
-		return;
-	}
-	
-	// Send message (implement endpoint)
-	showNotification('Message sent! We will reply within one business day.', 'success');
-	e.target.reset();
-}
-
-function showFormError(message) {
-	const statusEl = document.getElementById('contactMessage');
-	if (statusEl) {
-		statusEl.textContent = message;
-		statusEl.style.color = '#dc2626';
-	}
-}
-
-// ============================================
-// WORKSPACE SWITCHER MODAL
-// ============================================
-
-function showWorkspaceSwitcher() {
-	// Create modal
-	const modal = document.createElement('div');
-	modal.className = 'modal-overlay';
-	modal.innerHTML = `
-		<div class="modal">
-			<h2>Select Workspace</h2>
-			<div class="workspace-list">
-				${state.workspaces.map(ws => `
-					<button class="workspace-option ${state.workspace && state.workspace.id === ws.id ? 'active' : ''}" 
-						data-id="${ws.id}">
-						${ws.name}
-						${state.workspace && state.workspace.id === ws.id ? ' ✓' : ''}
-					</button>
-				`).join('')}
-			</div>
-			<button id="create-workspace-btn" class="btn-primary">+ New Workspace</button>
-			<button class="btn-secondary modal-close">Cancel</button>
-		</div>
-	`;
-	
-	document.body.appendChild(modal);
-	
-	// Event listeners
-	modal.querySelectorAll('.workspace-option').forEach(btn => {
-		btn.addEventListener('click', () => {
-			const wsId = parseInt(btn.dataset.id);
-			selectWorkspace(wsId);
-			modal.remove();
-		});
-	});
-	
-	modal.querySelector('#create-workspace-btn').addEventListener('click', () => {
-		promptCreateWorkspace();
-		modal.remove();
-	});
-	
-	modal.querySelector('.modal-close').addEventListener('click', () => {
-		modal.remove();
-	});
-}
-
-async function promptCreateWorkspace() {
-	const name = prompt('Workspace name:');
-	if (!name) return;
-	
-	const description = prompt('Description (optional):') || '';
-	await createWorkspace(name, description);
-}
+document.showPaymentModal = showPaymentModal;
