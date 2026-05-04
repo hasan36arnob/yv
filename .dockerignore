@@ -1,13 +1,69 @@
+# Git
 .git
 .gitignore
-README.md
+.gitattributes
+
+# Build artifacts
+bin/
 *.exe
-*.db
-*.json
-*.log
-*.bat
-*.sh
-*.md
-build/
-node_modules/
+*.dll
+*.so
+*.dylib
+
+# IDE
+.idea/
 .vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+vendor/
+node_modules/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# Database files (local dev)
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment files (don't include secrets in image)
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+coverage.out
+coverage.html
+
+# Documentation build
+docs/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Docker
+docker-compose.override.yml
+Dockerfile.dev
+
+# Static files (embedded in binary via go:embed)
+# Note: These are copied into binary, not needed in image
+# index.html
+# style.css
+# script.js
+
+# Other
+*.md # Optional: exclude from image if not needed
+!README.md # But keep main README

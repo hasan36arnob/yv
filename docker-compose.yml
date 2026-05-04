@@ -1,12 +1,61 @@
-version: '3.9'
+version: '3.8'
+
 services:
-  todopro:
-    build: .
-    container_name: todopro-app
-    ports:
-      - '5000:5000'
-    volumes:
-      - ./data:/data
+  postgres:
+    image: postgres:15-alpine
+    container_name: todopro-db
     environment:
-      - DATA_FILE=/data/tasks.json
+      POSTGRES_USER: todopro
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-todopro_secure_pass_123}
+      POSTGRES_DB: todopro
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - todopro-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todopro"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todopro-backend
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: todopro
+      DB_PASSWORD: ${DB_PASSWORD:-todopro_secure_pass_123}
+      DB_NAME: todopro
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production-min-32-chars}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      APP_URL: ${APP_URL:-http://localhost:5000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - todopro-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  todopro-network:
+    driver: bridge
